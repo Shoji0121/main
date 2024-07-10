@@ -1,0 +1,102 @@
+# ARGUMENTS --------------------------------------------------------------------
+##
+# Board architecture
+##
+ARG IMAGE_ARCH=
+
+##
+# Base container version
+##
+ARG BASE_VERSION=6.12.0-rc
+
+##
+# Directory of the application inside container
+##
+ARG APP_ROOT=
+
+##
+# Debug port
+##
+ARG SSH_DEBUG_PORT=
+
+##
+# Run as
+##
+ARG SSHUSERNAME=
+
+# BUILD ------------------------------------------------------------------------
+##
+# Deploy Step .NET Uno
+##
+FROM --platform=linux/${IMAGE_ARCH} \
+    commontorizon/mono-sdk:${BASE_VERSION} AS Debug
+
+ARG IMAGE_ARCH
+ARG APP_ROOT
+ARG SSH_DEBUG_PORT
+ARG SSHUSERNAME
+
+# SSH for remote debug
+EXPOSE ${SSH_DEBUG_PORT}
+
+# Make sure we don't get notifications we can't answer during building.
+ENV DEBIAN_FRONTEND="noninteractive"
+
+# automate for torizonPackages.json
+RUN apt-get -q -y update && \
+    apt-get -q -y install \
+    screen \
+    libgtk2.0 \
+# DO NOT REMOVE THIS LABEL: this is used for VS Code automation
+    # __torizon_packages_dev_start__
+    # __torizon_packages_dev_end__
+# DO NOT REMOVE THIS LABEL: this is used for VS Code automation
+    && \
+    apt-get clean && apt-get autoremove && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN apt-get -q -y update && \
+    apt-get -q -y install \
+    fonts-noto-cjk \
+    && \
+    apt-get clean && apt-get autoremove && \
+    rm -rf /var/lib/apt/lists/*
+
+# ⚠️ DEBUG PURPOSES ONLY!!
+# copies RSA key to enable SSH login for user
+COPY .conf/id_rsa.pub /id_rsa.pub
+RUN rm -rf /usr/share/fonts/
+COPY ./PendingMono_v0.0.2/ /usr/share/fonts/
+# 
+RUN echo 'export MY_SETTING=1000' >> /home/torizon/.bashrc 
+RUN /bin/bash -c "source /home/torizon/.bashrc"
+RUN echo 'export MY_SETTING=1000' >> /root/.bashrc 
+RUN /bin/bash -c "source /root/.bashrc"
+# create folders needed for the different components
+# configures SSH access to the container and sets environment by default
+RUN mkdir /var/run/sshd && \
+    sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' \
+        -i /etc/pam.d/sshd && \
+    if test $SSHUSERNAME != root ; \
+        then mkdir -p /home/$SSHUSERNAME/.ssh ; \
+        else mkdir -p /root/.ssh ; fi && \
+    if test $SSHUSERNAME != root ; \
+        then cp /id_rsa.pub /home/$SSHUSERNAME/.ssh/authorized_keys ; \
+        else cp /id_rsa.pub /root/.ssh/authorized_keys ; fi && \
+    echo "PermitUserEnvironment yes" >> /etc/ssh/sshd_config && \
+    echo "Port ${SSH_DEBUG_PORT}" >> /etc/ssh/sshd_config && \
+    su -c "env" $SSHUSERNAME > /etc/environment
+
+RUN rm -r /etc/ssh/ssh*key && \
+    dpkg-reconfigure openssh-server
+COPY --chown=$SSHUSERNAME:$SSHUSERNAME ./a.sh /home/torizon/app/a.sh
+COPY --chown=$SSHUSERNAME:$SSHUSERNAME ./westoncalibrator.sh /home/torizon/app/westoncalibrator.sh
+
+COPY --chown=$SSHUSERNAME:$SSHUSERNAME ./assets ${APP_ROOT}/assets
+
+# Copy the compiled application to the $APP_ROOT directory path inside the
+# container, where $APP_ROOT is the torizon_app_root configuration defined
+# in settings.json.
+COPY --chown=$SSHUSERNAME:$SSHUSERNAME ./bin/Debug ${APP_ROOT}
+
+CMD [ "/usr/sbin/sshd", "-D" ]

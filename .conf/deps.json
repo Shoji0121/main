@@ -1,0 +1,10 @@
+{
+    "packages": [
+        "openssh-client",
+        "sshpass",
+        "nuget"
+    ],
+    "installDepsScripts": [
+        ".conf/installDepsScripts/installMonoDevel.sh"
+    ]
+}
