@@ -52,3 +52,4 @@ weston-touch-calibrator /sys/devices/platform/soc/2100000.bus/21a4000.i2c/i2c-1/
 
 # Bring weston to foreground again to allow verifying the settings
 wait $WESTON_SERVER
+docker run -v "$(pwd)/data/config:/root/.config" -v "$(pwd)/data/Desktop:/root/Desktop" -p 8080:8080 uphy/ubuntu-desktop-jp:20.04
