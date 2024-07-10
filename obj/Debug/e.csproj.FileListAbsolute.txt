@@ -1,0 +1,10 @@
+/home/shoji/e/bin/Debug/e.exe.config
+/home/shoji/e/bin/Debug/e.exe
+/home/shoji/e/bin/Debug/e.pdb
+/home/shoji/e/obj/Debug/e.csproj.AssemblyReference.cache
+/home/shoji/e/obj/Debug/e.Form1.resources
+/home/shoji/e/obj/Debug/e.Properties.Resources.resources
+/home/shoji/e/obj/Debug/e.csproj.GenerateResource.cache
+/home/shoji/e/obj/Debug/e.csproj.CoreCompileInputs.cache
+/home/shoji/e/obj/Debug/e.exe
+/home/shoji/e/obj/Debug/e.pdb

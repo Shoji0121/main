@@ -1,8 +1,8 @@
-*/**/bin
-*/**/obj
-bin
-obj
-libs
+# */**/bin
+# */**/obj
+# bin
+# obj
+# libs
 
 credentials.zip
 *.lock.yml
